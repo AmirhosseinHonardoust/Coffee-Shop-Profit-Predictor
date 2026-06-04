@@ -2,7 +2,8 @@
   
 # Coffee Shop Profit Predictor
 
-![Python](https://img.shields.io/badge/Python-3.10%2B-blue) ![SQLite](https://img.shields.io/badge/SQLite-Feature%20Engineering-lightgrey) ![scikit-learn](https://img.shields.io/badge/scikit--learn-Regression-orange) ![Status](https://img.shields.io/badge/Status-Educational%20ML%20Project-green)
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue) ![SQLite](https://img.shields.io/badge/SQLite-Feature%20Engineering-lightgrey) ![scikit-learn](https://img.shields.io/badge/scikit--learn-Regression-orange) ![Status](https://img.shields.io/badge/Status-Educational%20ML%20Project-green) [![CI](https://github.com/AmirhosseinHonardoust/Coffee-Shop-Profit-Predictor/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/AmirhosseinHonardoust/Coffee-Shop-Profit-Predictor/actions/workflows/ci.yml)
+
 
 </div>
 
