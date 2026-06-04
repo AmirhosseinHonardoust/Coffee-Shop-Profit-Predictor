@@ -2,11 +2,17 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import sqlite3
 from pathlib import Path
 from typing import Final
 
 import pandas as pd
+
+from config import REQUIRED_CANDIDATE_COLUMNS, REQUIRED_TRAIN_COLUMNS
+from utils import setup_logging, validate_dataframe
+
+LOGGER = logging.getLogger(__name__)
 
 SCHEMA_TRAIN: Final[str] = """
 CREATE TABLE IF NOT EXISTS locations_train (
@@ -25,7 +31,7 @@ CREATE TABLE IF NOT EXISTS locations_train (
 );
 """
 
-SCHEMA_CAND: Final[str] = """
+SCHEMA_CANDIDATES: Final[str] = """
 CREATE TABLE IF NOT EXISTS locations_candidates (
     lat REAL,
     lon REAL,
@@ -41,29 +47,22 @@ CREATE TABLE IF NOT EXISTS locations_candidates (
 );
 """
 
-REQUIRED_TRAIN = {
-    "lat", "lon", "foot_traffic", "rent_per_sqm", "competition",
-    "median_income", "office_density", "weekend_activity",
-    "events_per_month", "coffee_price", "promo_spend", "profit",
-}
-
-REQUIRED_CAND = REQUIRED_TRAIN - {"profit"}
-
-
-def _validate_columns(df: pd.DataFrame, required: set[str], table: str) -> None:
-    missing = required - set(df.columns)
-    if missing:
-        raise ValueError(
-            f"Missing columns for {table}: {sorted(missing)}. "
-            "Please check your input CSV schema."
-        )
-
 
 def _load_csv_to_db(csv_path: Path, table: str, con: sqlite3.Connection) -> None:
     df = pd.read_csv(csv_path)
-    required = REQUIRED_TRAIN if table == "locations_train" else REQUIRED_CAND
-    _validate_columns(df, required, table)
+    required = REQUIRED_TRAIN_COLUMNS if table == "locations_train" else REQUIRED_CANDIDATE_COLUMNS
+    validate_dataframe(df, required, table)
     df.to_sql(table, con, if_exists="replace", index=False)
+    LOGGER.info("Loaded %s rows into %s", len(df), table)
+
+
+def load_csvs_to_db(train_csv: Path, candidates_csv: Path, db_path: Path) -> None:
+    """Load and validate source CSV files into SQLite tables."""
+    with sqlite3.connect(db_path) as con:
+        con.execute(SCHEMA_TRAIN)
+        con.execute(SCHEMA_CANDIDATES)
+        _load_csv_to_db(train_csv, "locations_train", con)
+        _load_csv_to_db(candidates_csv, "locations_candidates", con)
 
 
 def parse_args() -> argparse.Namespace:
@@ -75,16 +74,11 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    setup_logging()
     args = parse_args()
     db = Path(args.db)
-
-    with sqlite3.connect(db) as con:
-        con.execute(SCHEMA_TRAIN)
-        con.execute(SCHEMA_CAND)
-        _load_csv_to_db(Path(args.train), "locations_train", con)
-        _load_csv_to_db(Path(args.candidates), "locations_candidates", con)
-
-    print(f"Loaded CSVs into {db}: tables [locations_train, locations_candidates]")
+    load_csvs_to_db(Path(args.train), Path(args.candidates), db)
+    LOGGER.info("Loaded CSVs into %s: tables [locations_train, locations_candidates]", db)
 
 
 if __name__ == "__main__":
