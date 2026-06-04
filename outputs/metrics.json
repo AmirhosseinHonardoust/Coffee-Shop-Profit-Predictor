@@ -1,0 +1,25 @@
+{
+  "selected_model": "ElasticNet",
+  "selection_rule": "lowest mean CV MAE among non-baseline models on the training split",
+  "random_state": 42,
+  "test_size": 0.25,
+  "rows": {
+    "total": 220,
+    "train": 165,
+    "holdout_test": 55
+  },
+  "holdout": {
+    "r2": 0.6467652784174763,
+    "mae": 383.5785433471232,
+    "baseline_r2": -0.0303247630317105,
+    "baseline_mae": 699.3877220559065
+  },
+  "cross_validation_selected_model_full_data": {
+    "cv_splits": 5,
+    "r2_mean": 0.5298150979789187,
+    "r2_std": 0.10967737962740379,
+    "mae_mean": 413.6702309830562,
+    "mae_std": 46.65496134067752
+  },
+  "note": "Candidate scoring uses the selected model refit on all training rows after holdout evaluation. Diagnostic plots use only holdout predictions."
+}
