@@ -4,7 +4,6 @@
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue) ![SQLite](https://img.shields.io/badge/SQLite-Feature%20Engineering-lightgrey) ![scikit-learn](https://img.shields.io/badge/scikit--learn-Regression-orange) ![Status](https://img.shields.io/badge/Status-Educational%20ML%20Project-green) [![CI](https://github.com/AmirhosseinHonardoust/Coffee-Shop-Profit-Predictor/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/AmirhosseinHonardoust/Coffee-Shop-Profit-Predictor/actions/workflows/ci.yml)
 
-
 </div>
 
 A professional machine learning project that predicts the **monthly profit** of potential coffee-shop locations using **SQL feature engineering** and a **Python / scikit-learn regression workflow**. The project loads location data into SQLite, creates reusable engineered features, compares multiple regression models, evaluates performance honestly, and ranks new candidate sites with business-readable risk explanations.
@@ -137,34 +136,49 @@ outputs/charts/
 
 The main charts include:
 
+<div align="center">
+
 | Chart | Purpose |
 |---|---|
 | Actual vs Predicted | Compares holdout actual profit with predicted profit |
 | Residuals Histogram | Shows model error distribution |
 | Feature Importance | Shows the strongest model signals |
 | Model Comparison MAE | Compares models using mean absolute error |
+</div>
 
 ### Actual vs Predicted Profit
 
+<div align="center">
+
 <img width="550" height="400" alt="actual_vs_predicted" src="https://github.com/user-attachments/assets/1975709e-240c-41b6-b539-f4c61177df82" />
+</div>
 
 This chart uses **holdout test-set predictions only**. That makes the diagnostic more honest than plotting predictions on data the model already trained on.
 
 ### Residuals Histogram
 
+<div align="center">
+
 <img width="550" height="350" alt="residuals_hist" src="https://github.com/user-attachments/assets/69b37b0f-4c5e-4640-9463-2145121fb2c8" />
+</div>
 
 The residual chart shows how far predictions are from actual profit values. A narrower distribution means lower prediction error.
 
 ### Feature Importance
 
+<div align="center">
+
 <img width="550" height="350" alt="feature_importance" src="https://github.com/user-attachments/assets/7d06bcca-69be-451f-9fcd-e13a22ed5df8" />
+</div>
 
 For the selected ElasticNet model, feature importance is based on standardized coefficients. These values should be interpreted as **model associations**, not causal proof.
 
 ### Model Comparison
 
+<div align="center">
+
 <img width="550" height="350" alt="model_comparison_mae" src="https://github.com/user-attachments/assets/d0d9131d-876f-4a68-9477-9e99d801288e" />
+</div>
 
 The model comparison chart helps show whether the selected model meaningfully improves over simpler alternatives and the mean baseline.
 
@@ -207,12 +221,15 @@ features_candidates
 
 Engineered features include:
 
+<div align="center">
+
 | Feature | Formula | Purpose |
 |---|---|---|
 | `demand_adj` | `foot_traffic / (1 + competition)` | Demand adjusted for competitive intensity |
 | `wknd_traffic` | `weekend_activity × foot_traffic` | Weekend demand potential |
 | `price_income` | `coffee_price × (median_income / 1000)` | Price-income fit / affordability signal |
 | `promo_comp_adj` | `promo_spend / (1 + competition)` | Promotion adjusted for competition |
+</div>
 
 ### Regression Models
 
@@ -391,6 +408,8 @@ outputs/scored_candidates.csv
 
 Candidate scoring returns ranked results with fields such as:
 
+<div align="center">
+
 | Field | Meaning |
 |---|---|
 | `rank` | Candidate rank by predicted monthly profit |
@@ -401,6 +420,7 @@ Candidate scoring returns ranked results with fields such as:
 | `profile_distance` | Distance from the training-data feature profile |
 | `main_positive_drivers` | Business-readable features helping the score |
 | `main_negative_drivers` | Business-readable features hurting the score |
+</div>
 
 Example output format:
 
@@ -452,14 +472,17 @@ outputs/charts/
 
 The current run selects **ElasticNet**.
 
+<div align="center">
+
 | Metric | Value |
-|---|---:|
+|---|---|
 | Holdout R² | `0.647` |
 | Holdout MAE | `€383.58` |
 | Mean baseline R² | `-0.030` |
 | Mean baseline MAE | `€699.39` |
 | 5-fold CV R² | `0.530 ± 0.110` |
 | 5-fold CV MAE | `€413.67 ± €46.65` |
+</div>
 
 ### Why This Matters
 
