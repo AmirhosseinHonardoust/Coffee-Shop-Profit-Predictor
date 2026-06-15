@@ -1,23 +1,43 @@
-# Tooling configuration for the Coffee Shop Profit Predictor.
-#
-# This file intentionally contains only [tool.*] sections: it configures
-# linting, formatting, and type checking without changing how the project
-# is imported or installed. Packaging (a [project] table + entry points)
-# is a separate, later change.
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "coffee-shop-profit-predictor"
+version = "0.1.0"
+description = "Predict monthly profit of candidate coffee-shop locations with SQL feature engineering and a scikit-learn regression workflow."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "Amir Honardoust" }]
+dependencies = [
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "matplotlib>=3.7",
+    "scikit-learn>=1.3",
+    "joblib>=1.3",
+]
+
+[project.optional-dependencies]
+dev = ["ruff", "black", "mypy", "pre-commit"]
+
+[project.scripts]
+coffee-build-db = "coffee_shop_predictor.create_db:main"
+coffee-train = "coffee_shop_predictor.train_regression:main"
+coffee-score = "coffee_shop_predictor.score_new_sites:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+coffee_shop_predictor = ["queries.sql"]
 
 [tool.ruff]
 line-length = 100
 target-version = "py310"
-# `src` is on sys.path when scripts are run as `python src/<file>.py`,
-# so ruff should treat it as a first-party source root for import sorting.
 src = ["src", "tests"]
 
 [tool.ruff.lint]
-# E/F: pycodestyle + pyflakes (correctness, unused imports/vars)
-# I:   import sorting (isort)
-# B:   flake8-bugbear (likely bugs)
-# SIM: flake8-simplify (readability)
-# UP:  pyupgrade (modern syntax for the target Python)
 select = ["E", "F", "I", "B", "SIM", "UP"]
 
 [tool.black]
@@ -28,6 +48,4 @@ target-version = ["py310", "py311", "py312"]
 python_version = "3.10"
 warn_redundant_casts = true
 warn_unused_ignores = true
-# pandas, scikit-learn, and joblib do not ship type stubs / py.typed markers,
-# so their imports are treated as untyped rather than failing the type check.
 ignore_missing_imports = true
