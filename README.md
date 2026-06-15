@@ -1,15 +1,21 @@
 <div align="center">
-  
+
 # Coffee Shop Profit Predictor
 
-![Python](https://img.shields.io/badge/Python-3.10%2B-blue) ![SQLite](https://img.shields.io/badge/SQLite-Feature%20Engineering-lightgrey) ![scikit-learn](https://img.shields.io/badge/scikit--learn-Regression-orange) ![Status](https://img.shields.io/badge/Status-Educational%20ML%20Project-green) [![CI](https://github.com/AmirhosseinHonardoust/Coffee-Shop-Profit-Predictor/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/AmirhosseinHonardoust/Coffee-Shop-Profit-Predictor/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
+![SQLite](https://img.shields.io/badge/SQLite-Feature%20Engineering-lightgrey)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-Regression-orange)
+![Code Quality](https://img.shields.io/badge/Code%20Quality-Ruff%20%7C%20Black%20%7C%20mypy-green)
+![Status](https://img.shields.io/badge/Status-Educational%20ML%20Project-purple)
+[![CI](https://github.com/AmirhosseinHonardoust/Coffee-Shop-Profit-Predictor/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/AmirhosseinHonardoust/Coffee-Shop-Profit-Predictor/actions/workflows/ci.yml)
 
 </div>
 
-A professional machine learning project that predicts the **monthly profit** of potential coffee-shop locations using **SQL feature engineering** and a **Python / scikit-learn regression workflow**. The project loads location data into SQLite, creates reusable engineered features, compares multiple regression models, evaluates performance honestly, and ranks new candidate sites with business-readable risk explanations.
+A machine learning project that turns coffee-shop location data into a **monthly-profit estimate**, using **SQL feature engineering**, a **scikit-learn regression workflow**, **honest holdout evaluation**, **multi-model comparison**, **business-readable candidate ranking with risk bands**, and an **installable command-line package**.
 
 > **Important:** This project is a **site-selection decision-support demo**, not a production financial forecasting system.
-> It does not guarantee real-world profitability. It estimates likely profit from the available features and should be interpreted with the project limitations in mind.
+>
+> It estimates likely monthly profit from the available location features and should be read alongside the limitations below. It does not guarantee real-world profitability, does not include costs such as labor or goods sold, and should never be the sole basis for a lease or investment decision.
 
 ---
 
@@ -18,17 +24,20 @@ A professional machine learning project that predicts the **monthly profit** of 
 - [Project Overview](#project-overview)
 - [What This Project Does](#what-this-project-does)
 - [What This Project Does Not Do](#what-this-project-does-not-do)
-- [Features](#features)
-- [Charts and Visual Analysis](#charts-and-visual-analysis)
-- [How the Model Works](#how-the-model-works)
+- [Key Features](#key-features)
+- [System Workflow](#system-workflow)
 - [Project Structure](#project-structure)
 - [Installation](#installation)
+- [Quick Start](#quick-start)
 - [Building the Database](#building-the-database)
 - [Training the Model](#training-the-model)
 - [Scoring Candidate Sites](#scoring-candidate-sites)
+- [SQL Feature Engineering](#sql-feature-engineering)
 - [Model Output](#model-output)
-- [Evaluation](#evaluation)
-- [Testing](#testing)
+- [Model Artifacts and Loading Safety](#model-artifacts-and-loading-safety)
+- [Evaluation Metrics](#evaluation-metrics)
+- [Visual Reports](#visual-reports)
+- [Testing and CI](#testing-and-ci)
 - [Code Quality](#code-quality)
 - [Data Statement](#data-statement)
 - [Limitations](#limitations)
@@ -42,27 +51,16 @@ A professional machine learning project that predicts the **monthly profit** of 
 
 ## Project Overview
 
-Coffee-shop site selection is a practical business problem. A strong location can increase sales, while a poor location can create high rent costs, low traffic, and weak profitability.
+Coffee-shop site selection is often presented as if a model can simply pick a winning location. In reality, a regression model cannot guarantee future profit; it can only estimate likely profit from the features it was given. A profit estimate is only useful if it can support a defensible action:
 
-This project demonstrates a clean end-to-end analytics workflow:
+- rank candidate locations by predicted monthly profit
+- flag candidates whose feature profile is far from the training data
+- explain which features push a prediction up or down
+- communicate uncertainty and limitations clearly
 
-- Load training and candidate-location data from CSV files
-- Store the data in a SQLite database
-- Create reusable SQL feature views
-- Train and compare regression models
-- Evaluate the selected model on a holdout test set
-- Score new candidate sites
-- Save metrics, charts, predictions, and ranked recommendations
-- Document limitations clearly
+This project demonstrates an end-to-end, honest regression workflow on a labeled set of location features. It loads data into SQLite, builds reusable SQL feature views, compares multiple regression models with cross-validation, evaluates the selected model on a holdout set, and scores new candidate sites with risk bands and business-readable drivers.
 
-The goal is to demonstrate:
-
-- SQL + Python integration
-- Practical feature engineering
-- Reproducible machine learning workflow design
-- Honest model evaluation
-- Business-readable candidate ranking
-- Professional portfolio documentation
+The goal is to show how a regression model can be turned into a **responsible decision-support tool**, not just a single R² or MAE score.
 
 ---
 
@@ -70,18 +68,18 @@ The goal is to demonstrate:
 
 This project can:
 
-- Predict monthly profit for coffee-shop locations
-- Engineer features using SQL views
-- Compare multiple regression models
-- Use cross-validation for model selection
-- Compare against a mean baseline
-- Generate holdout test-set diagnostics
-- Save trained model artifacts
-- Score new candidate locations
-- Rank candidates by predicted profitability
-- Add risk bands and explanation columns
-- Run automated tests
-- Document data and model limitations
+- Load training and candidate-location data from CSV files
+- Store the data in a SQLite database
+- Engineer reusable features through SQL views
+- Compare multiple regression models with cross-validation
+- Compare every model against a mean baseline
+- Tune hyperparameters for Ridge and ElasticNet
+- Evaluate the selected model on a separate holdout set
+- Save trained model artifacts with metadata
+- Score new candidate locations and rank them by predicted profit
+- Add risk bands and positive/negative driver explanations
+- Generate diagnostic charts
+- Run automated tests and CI smoke workflows
 
 ---
 
@@ -96,108 +94,42 @@ This project does **not**:
 - Validate predictions against real store openings
 - Provide a formal statistical prediction interval
 - Prove that a feature causally increases or decreases profit
-- Make final business decisions without human review
 
-A production site-selection system would require real transaction data, lease terms, store size, local regulations, labor costs, competitor quality, seasonality, and geographic validation.
-
----
-
-## Features
-
-- **SQLite database creation** from CSV inputs
-- **SQL feature engineering** through reusable views
-- **Centralized configuration** in `src/config.py`
-- **Data validation** for required columns, missing values, numeric types, and impossible values
-- **Regression model comparison** using scikit-learn
-- **Mean baseline model** for honest comparison
-- **Linear Regression, Ridge, ElasticNet, Random Forest, and Gradient Boosting** experiments
-- **Cross-validation** for model comparison
-- **Hyperparameter tuning** for Ridge and ElasticNet
-- **Holdout test-set evaluation**
-- **Saved sklearn model** using `joblib`
-- **Candidate-site ranking**
-- **Risk band assignment**
-- **Business-readable positive and negative drivers**
-- **Charts for model diagnostics**
-- **Unit tests** with Python `unittest`
-- **Portfolio-ready README documentation**
+A production site-selection system would need real transaction data, lease terms, store size, local regulations, labor costs, competitor quality, seasonality, and geographic validation.
 
 ---
 
-## Charts and Visual Analysis
+## Key Features
 
-The project automatically generates visual outputs during training to make model behavior easier to understand.
-
-Generated charts are saved in:
-
-```text
-outputs/charts/
-```
-
-The main charts include:
-
-<div align="center">
-
-| Chart | Purpose |
-|---|---|
-| Actual vs Predicted | Compares holdout actual profit with predicted profit |
-| Residuals Histogram | Shows model error distribution |
-| Feature Importance | Shows the strongest model signals |
-| Model Comparison MAE | Compares models using mean absolute error |
-</div>
-
-### Actual vs Predicted Profit
-
-<div align="center">
-
-<img width="550" height="400" alt="actual_vs_predicted" src="https://github.com/user-attachments/assets/1975709e-240c-41b6-b539-f4c61177df82" />
-</div>
-
-This chart uses **holdout test-set predictions only**. That makes the diagnostic more honest than plotting predictions on data the model already trained on.
-
-### Residuals Histogram
-
-<div align="center">
-
-<img width="550" height="350" alt="residuals_hist" src="https://github.com/user-attachments/assets/69b37b0f-4c5e-4640-9463-2145121fb2c8" />
-</div>
-
-The residual chart shows how far predictions are from actual profit values. A narrower distribution means lower prediction error.
-
-### Feature Importance
-
-<div align="center">
-
-<img width="550" height="350" alt="feature_importance" src="https://github.com/user-attachments/assets/7d06bcca-69be-451f-9fcd-e13a22ed5df8" />
-</div>
-
-For the selected ElasticNet model, feature importance is based on standardized coefficients. These values should be interpreted as **model associations**, not causal proof.
-
-### Model Comparison
-
-<div align="center">
-
-<img width="550" height="350" alt="model_comparison_mae" src="https://github.com/user-attachments/assets/d0d9131d-876f-4a68-9477-9e99d801288e" />
-</div>
-
-The model comparison chart helps show whether the selected model meaningfully improves over simpler alternatives and the mean baseline.
+- **SQLite feature store** built from CSV inputs
+- **SQL feature engineering** through reusable views, so training and candidate sites are transformed identically (no train/serve skew)
+- **Centralized configuration** in `config.py` for features, ranges, labels, and output filenames
+- **Input validation** for schema, missing values, numeric types, and impossible ranges
+- **Multi-model comparison** across Linear Regression, Ridge, ElasticNet, Random Forest, and Gradient Boosting
+- **Mean-baseline comparison** so improvements are read honestly
+- **Cross-validation** and **hyperparameter tuning** for Ridge and ElasticNet
+- **Holdout test-set evaluation**, with all diagnostic plots drawn from unseen data only
+- **Candidate ranking** with **heuristic risk bands** and **business-readable positive/negative drivers**
+- **Saved model artifacts** via joblib, plus a metadata sidecar describing the training feature profile
+- **Installable package** exposing `coffee-build-db`, `coffee-train`, and `coffee-score` commands
+- **Ruff + Black + mypy** quality gates with **pre-commit** hooks
+- **Unit tests and GitHub Actions CI** across Python 3.10–3.12
+- **Honest documentation** of data and model limitations
 
 ---
 
-## How the Model Works
-
-The project uses a structured regression workflow:
+## System Workflow
 
 ```text
 CSV location data
         ↓
 SQLite database
         ↓
-SQL feature views
+SQL feature views (shared by train and candidates)
         ↓
-Data validation
+Input validation
         ↓
-Train/test split
+Train/holdout split
         ↓
 Model comparison + cross-validation
         ↓
@@ -207,42 +139,8 @@ Holdout evaluation
         ↓
 Candidate-site scoring
         ↓
-Ranked recommendations with risk bands
+Ranked recommendations with risk bands and drivers
 ```
-
-### SQL Feature Engineering
-
-Feature creation is performed in `src/queries.sql`, which creates two SQLite views:
-
-```text
-features_train
-features_candidates
-```
-
-Engineered features include:
-
-<div align="center">
-
-| Feature | Formula | Purpose |
-|---|---|---|
-| `demand_adj` | `foot_traffic / (1 + competition)` | Demand adjusted for competitive intensity |
-| `wknd_traffic` | `weekend_activity × foot_traffic` | Weekend demand potential |
-| `price_income` | `coffee_price × (median_income / 1000)` | Price-income fit / affordability signal |
-| `promo_comp_adj` | `promo_spend / (1 + competition)` | Promotion adjusted for competition |
-</div>
-
-### Regression Models
-
-The training script compares several models:
-
-- Mean Baseline
-- Linear Regression
-- Ridge
-- ElasticNet
-- Random Forest
-- Gradient Boosting
-
-ElasticNet is currently selected because it has the best mean cross-validated MAE among the non-baseline models in the current run.
 
 ---
 
@@ -250,6 +148,10 @@ ElasticNet is currently selected because it has the best mean cross-validated MA
 
 ```text
 Coffee-Shop-Profit-Predictor/
+│
+├── .github/
+│   └── workflows/
+│       └── ci.yml
 │
 ├── data/
 │   ├── locations_train.csv
@@ -271,19 +173,26 @@ Coffee-Shop-Profit-Predictor/
 │   └── scored_candidates.csv
 │
 ├── src/
-│   ├── config.py
-│   ├── create_db.py
-│   ├── queries.sql
-│   ├── score_new_sites.py
-│   ├── train_regression.py
-│   └── utils.py
+│   └── coffee_shop_predictor/
+│       ├── __init__.py
+│       ├── config.py
+│       ├── create_db.py
+│       ├── queries.sql
+│       ├── score_new_sites.py
+│       ├── train_regression.py
+│       └── utils.py
 │
 ├── tests/
 │   └── test_workflow.py
 │
+├── .gitignore
+├── .pre-commit-config.yaml
+├── pyproject.toml
 ├── README.md
 └── requirements.txt
 ```
+
+> The `outputs/` directory is regenerated by training and is not tracked in version control. CI rebuilds it on every run and uploads it as a build artifact.
 
 ---
 
@@ -312,26 +221,53 @@ python -m venv .venv
 source .venv/bin/activate
 ```
 
-### 3. Install Requirements
+### 3. Install the Package
+
+Install in editable mode. This pulls in all dependencies and registers the `coffee-build-db`, `coffee-train`, and `coffee-score` commands:
 
 ```bash
-pip install -r requirements.txt
+pip install -e .
+```
+
+For development tools (Ruff, Black, mypy, pre-commit):
+
+```bash
+pip install -e ".[dev]"
+```
+
+---
+
+## Quick Start
+
+Build the database:
+
+```bash
+coffee-build-db --train data/locations_train.csv --candidates data/locations_candidates.csv
+```
+
+Train and evaluate the model:
+
+```bash
+coffee-train
+```
+
+Score candidate sites:
+
+```bash
+coffee-score
 ```
 
 ---
 
 ## Building the Database
 
-Run:
-
 ```bash
-python src/create_db.py --train data/locations_train.csv --candidates data/locations_candidates.csv --db coffee.db
+coffee-build-db --train data/locations_train.csv --candidates data/locations_candidates.csv --db coffee.db
 ```
 
 This will:
 
-- Read the training CSV file
-- Read the candidate-site CSV file
+- Read the training and candidate CSV files
 - Validate required columns and numeric ranges
 - Create a SQLite database
 - Save the data into database tables
@@ -346,22 +282,19 @@ coffee.db
 
 ## Training the Model
 
-Run:
-
 ```bash
-python src/train_regression.py --db coffee.db --sql src/queries.sql --outdir outputs
+coffee-train --db coffee.db --outdir outputs
 ```
 
 This will:
 
 - Load SQL feature views
 - Split the training data into train and holdout sets
-- Compare multiple regression models
-- Run cross-validation
+- Compare multiple regression models with cross-validation
 - Select the best non-baseline model by cross-validated MAE
 - Evaluate the selected model on the holdout test set
-- Save the trained model
-- Save predictions, metrics, model comparison results, and charts
+- Refit the selected model on all data for candidate scoring
+- Save predictions, metrics, comparison results, and charts
 
 Generated outputs include:
 
@@ -376,24 +309,22 @@ outputs/predictions_all.csv
 outputs/charts/
 ```
 
+> The packaged SQL is located relative to the installed code, so `--sql` is optional. Pass it only to override the bundled `queries.sql`.
+
 ---
 
 ## Scoring Candidate Sites
 
-Run:
-
 ```bash
-python src/score_new_sites.py --db coffee.db --sql src/queries.sql --model outputs/model.joblib --outdir outputs
+coffee-score --db coffee.db --model outputs/model.joblib --outdir outputs
 ```
 
 This will:
 
 - Load candidate-site features from SQLite
 - Apply the trained model
-- Predict monthly profit
-- Rank candidate locations
-- Add risk bands
-- Add business-readable positive and negative drivers
+- Predict monthly profit and rank candidates
+- Add risk bands and business-readable drivers
 - Save the scored candidate file
 
 Generated output:
@@ -404,9 +335,35 @@ outputs/scored_candidates.csv
 
 ---
 
+## SQL Feature Engineering
+
+Feature creation lives in `queries.sql`, which builds two SQLite views so the same transformations are applied to training locations and candidate sites:
+
+```text
+features_train
+features_candidates
+```
+
+Engineered features:
+
+<div align="center">
+
+| Feature | Formula | Purpose |
+|---|---|---|
+| `demand_adj` | `foot_traffic / (1 + competition)` | Demand adjusted for competitive intensity |
+| `wknd_traffic` | `weekend_activity × foot_traffic` | Weekend demand potential |
+| `price_income` | `coffee_price × (median_income / 1000)` | Price-income fit / affordability signal |
+| `promo_comp_adj` | `promo_spend / (1 + competition)` | Promotion adjusted for competition |
+
+</div>
+
+> Keeping feature logic in SQL means a candidate site is never transformed differently from the training data it is compared against.
+
+---
+
 ## Model Output
 
-Candidate scoring returns ranked results with fields such as:
+Candidate scoring returns ranked results with the following fields:
 
 <div align="center">
 
@@ -415,14 +372,15 @@ Candidate scoring returns ranked results with fields such as:
 | `rank` | Candidate rank by predicted monthly profit |
 | `lat`, `lon` | Candidate coordinates |
 | `predicted_profit` | Estimated monthly profit in euros |
-| `risk_band` | Heuristic risk level based on feature profile distance |
+| `risk_band` | Heuristic risk level based on feature-profile distance |
 | `expected_error_eur` | Approximate expected error based on model MAE |
 | `profile_distance` | Distance from the training-data feature profile |
 | `main_positive_drivers` | Business-readable features helping the score |
 | `main_negative_drivers` | Business-readable features hurting the score |
+
 </div>
 
-Example output format:
+Example ranked result:
 
 ```text
 Rank: 1
@@ -432,104 +390,136 @@ Main positive drivers: high competition-adjusted promotion; high competition-adj
 Main negative drivers: no major red flags
 ```
 
-The risk band is a practical warning flag, not a formal statistical confidence interval.
+> The risk band is a practical warning flag based on how far a candidate sits from the training profile, not a formal statistical confidence interval.
 
 ---
 
-## Evaluation
+## Model Artifacts and Loading Safety
 
-The project uses a more responsible evaluation workflow than a single in-sample score.
-
-Evaluation includes:
-
-- Train/test split
-- Mean baseline comparison
-- Cross-validation
-- Holdout R²
-- Holdout MAE
-- Model comparison table
-- Test-set diagnostic charts
-
-Metrics are saved to:
+The trained model is stored as a joblib (pickle) file, alongside a metadata sidecar describing the training feature profile used for risk bands:
 
 ```text
-outputs/metrics.json
+outputs/model.joblib
+outputs/model_metadata.json
 ```
 
-Model comparison is saved to:
+> **Deserializing a pickle executes arbitrary code**, so only load model files you produced yourself or fully trust — never one downloaded from an untrusted source. Candidate scoring reads `model_metadata.json` to compute feature-profile distance; if it is missing, scoring falls back to conservative default thresholds.
 
-```text
-outputs/model_comparison.csv
-```
+---
 
-Charts are saved to:
+## Evaluation Metrics
 
-```text
-outputs/charts/
-```
+Evaluation uses a train/holdout split with cross-validation on the training split, plus a mean-baseline comparison so improvements are read honestly.
 
-### Current Results
+<div align="center">
 
-The current run selects **ElasticNet**.
+| Metric | Why it matters |
+|---|---|
+| Holdout R² | Variance explained on unseen data |
+| Holdout MAE | Average euro error on unseen data |
+| Mean-baseline R² / MAE | Honest floor: what predicting the average achieves |
+| 5-fold CV R² / MAE | Stability of the estimate across folds |
+
+</div>
+
+The current run selects **ElasticNet** (`alpha = 0.5`, `l1_ratio = 0.8`):
 
 <div align="center">
 
 | Metric | Value |
-|---|---|
-| Holdout R² | `0.647` |
-| Holdout MAE | `€383.58` |
-| Mean baseline R² | `-0.030` |
-| Mean baseline MAE | `€699.39` |
-| 5-fold CV R² | `0.530 ± 0.110` |
-| 5-fold CV MAE | `€413.67 ± €46.65` |
+|---|---:|
+| Holdout R² | 0.647 |
+| Holdout MAE | €383.58 |
+| Mean baseline R² | -0.030 |
+| Mean baseline MAE | €699.39 |
+| 5-fold CV R² | 0.530 ± 0.110 |
+| 5-fold CV MAE | €413.67 ± €46.65 |
+
 </div>
 
-### Why This Matters
-
-A common mistake in beginner machine learning projects is reporting overly optimistic scores from training data. This project avoids that by using a separate holdout test set and cross-validation.
-
-The model improves clearly over the mean baseline, but the cross-validation spread shows that results should still be interpreted carefully because the dataset is small.
+> The model improves clearly over the mean baseline, but the cross-validation spread shows results should be read carefully because the dataset is small.
 
 ---
 
-## Testing
+## Visual Reports
 
-Run the test suite:
+### Model diagnostics
+
+<div align="center">
+
+| Actual vs Predicted | Residuals Histogram |
+|---|---|
+| ![Actual vs predicted](https://github.com/user-attachments/assets/1975709e-240c-41b6-b539-f4c61177df82) | ![Residuals histogram](https://github.com/user-attachments/assets/69b37b0f-4c5e-4640-9463-2145121fb2c8) |
+| **Analysis:** Holdout-only predictions plotted against actual profit, with a y=x reference line. Using unseen data makes this diagnostic more honest than plotting on training data. | **Analysis:** The distribution of holdout residuals (actual − predicted). A narrower, centered spread means lower and less biased prediction error. |
+
+</div>
+
+### Feature signal and model selection
+
+<div align="center">
+
+| Feature Importance | Model Comparison (MAE) |
+|---|---|
+| ![Feature importance](https://github.com/user-attachments/assets/7d06bcca-69be-451f-9fcd-e13a22ed5df8) | ![Model comparison MAE](https://github.com/user-attachments/assets/d0d9131d-876f-4a68-9477-9e99d801288e) |
+| **Analysis:** Standardized coefficients for the selected ElasticNet model. These are model associations, not causal proof. | **Analysis:** Cross-validated MAE per model on the training split. This shows whether the selected model meaningfully beats simpler alternatives and the mean baseline. |
+
+</div>
+
+---
+
+## Testing and CI
+
+Run unit tests locally:
 
 ```bash
 python -m unittest discover -s tests -v
 ```
 
-The tests check important project behavior, including:
+Lint, format, and type check:
 
-- Python source files compile
-- CSV data loads into SQLite
-- SQL feature views are created correctly
-- Required engineered feature columns exist
-- Data validation rejects impossible values
+```bash
+ruff check src tests
+black --check src tests
+mypy src
+```
 
-Example passing result:
+The GitHub Actions workflow checks:
+
+- package installation in editable mode
+- linting with Ruff
+- format checking with Black
+- type checking with mypy
+- unit tests
+- a full training and scoring smoke workflow
+- training artifact and output validation
+- artifact upload across Python 3.10, 3.11, and 3.12
+
+CI is defined in:
 
 ```text
-Ran 3 tests
-OK
+.github/workflows/ci.yml
 ```
 
 ---
 
 ## Code Quality
 
-The project includes several maintainability improvements:
+The project separates responsibilities across modules:
 
-- Centralized project settings in `src/config.py`
-- Shared validation helpers in `src/utils.py`
-- Clear separation between database creation, model training, and candidate scoring
-- Reusable SQL feature definitions
-- Saved model artifacts
-- Saved evaluation outputs
-- Automated tests
+<div align="center">
 
-These choices make the project easier to reproduce, review, and extend.
+| Module | Purpose |
+|---|---|
+| `config.py` | Central settings: features, ranges, labels, and output filenames |
+| `utils.py` | Validation, JSON/CSV IO, and headless-safe plotting helpers |
+| `create_db.py` | Loads and validates CSVs into SQLite tables |
+| `train_regression.py` | Model comparison, cross-validation, holdout evaluation, and artifacts |
+| `score_new_sites.py` | Candidate scoring, risk bands, and driver explanations |
+| `queries.sql` | SQL feature views shared by training and candidate sites |
+
+</div>
+
+Tooling is configured through `pyproject.toml` (Ruff, Black, mypy) with pre-commit hooks in `.pre-commit-config.yaml`.
 
 ---
 
@@ -537,92 +527,68 @@ These choices make the project easier to reproduce, review, and extend.
 
 This repository is presented as a **demonstration / simulated retail analytics project**.
 
-The included dataset contains:
+The bundled dataset contains:
 
 ```text
 220 training locations
 60 candidate locations
 ```
 
-The data is suitable for demonstrating a portfolio machine learning workflow, but it should not be treated as verified real business data unless the source is updated and documented.
-
-If this project is later connected to real data, this section should be updated with:
-
-- Data source
-- Collection period
-- Geographic coverage
-- Feature definitions
-- Usage permissions
-- Known data quality issues
+The data is suitable for demonstrating a portfolio machine learning workflow, but it should not be treated as verified real business data. If the project is later connected to real data, this section should be updated with the data source, collection period, geographic coverage, feature definitions, usage permissions, and known data quality issues.
 
 ---
 
 ## Limitations
 
-This project has important limitations.
+This project has important limitations:
 
-The model:
+- The dataset is small and simulated, not a production corpus
+- The model does not include store size, total rent, labor cost, or cost of goods sold
+- The model does not include opening hours, seasonality, competitor quality, or brand effects
+- Risk bands are heuristic, not formal confidence intervals
+- The model may perform poorly on locations outside the training profile
+- High accuracy on the bundled data does not imply real-world accuracy
+- Predictions are decision-support estimates, not final answers
 
-- Uses a small dataset
-- Uses demonstration/simulated data
-- Does not include store size
-- Does not convert `rent_per_sqm` into total rent
-- Does not include labor cost
-- Does not include cost of goods sold
-- Does not include opening hours
-- Does not include seasonality
-- Does not include competitor quality
-- Does not include brand effects
-- Does not include local regulations or lease terms
-- Uses heuristic risk bands, not formal confidence intervals
-- May perform poorly on locations outside the training-data profile
-- Should not be used as the only basis for investment decisions
-
-High performance on the included data does not guarantee high performance in real-world site selection.
+The project is strongest as a portfolio demonstration of an honest, reproducible regression workflow.
 
 ---
 
 ## Responsible Use
 
-This project is intended for:
+This repository is intended for:
 
-- Machine learning education
-- Data analyst / data scientist portfolio demonstration
-- SQL feature engineering practice
-- Regression modeling practice
-- Retail analytics workflow design
-- Responsible model documentation practice
+- machine learning and data-analytics education
+- SQL feature engineering and regression practice
+- demonstrating honest holdout evaluation
+- retail analytics workflow design
+- responsible-ML documentation practice
+- portfolio demonstration
 
-It should not be used for:
+It should not be used as-is for:
 
-- Real lease-signing decisions without deeper analysis
-- Financial forecasting without validation
-- Automated investment decisions
-- Replacing expert real-estate judgment
-- High-stakes business decisions without human review
+- real lease-signing decisions without deeper analysis
+- financial forecasting without validation
+- automated investment decisions
+- replacing expert real-estate judgment
+- any high-stakes business decision without human review
 
-Predictions should be treated as **decision-support estimates**, not final answers.
+Any real deployment would require diverse, validated data, total-cost modeling, geographic validation, and a human review process.
 
 ---
 
 ## Future Improvements
 
-Possible future improvements include:
+Potential next improvements:
 
-- Add real store size and calculate total monthly rent
-- Add labor cost and cost of goods sold
-- Add opening hours and seasonality
-- Add competitor density using geographic distance
-- Add competitor quality and brand strength
-- Add local demographic and transit data
+- Add a reproducible synthetic data generator with documented distributions
+- Add real store size and compute total monthly rent
+- Add labor cost, cost of goods sold, opening hours, and seasonality
+- Add competitor density and quality using geographic distance
+- Add bootstrapped or quantile prediction intervals
+- Add SHAP or permutation-importance explanations
 - Add map-based candidate visualization
-- Add bootstrapped prediction intervals
-- Add SHAP or permutation importance explanations
-- Add a Streamlit dashboard
-- Add Docker support
-- Add GitHub Actions CI
-- Add linting and formatting checks
-- Add a full EDA notebook
+- Add a Streamlit dashboard and Docker support
 
 ---
 
@@ -636,6 +602,10 @@ Possible future improvements include:
 - matplotlib
 - joblib
 - unittest
+- Ruff
+- Black
+- mypy
+- GitHub Actions
 
 ---
 
@@ -649,6 +619,6 @@ GitHub: [@AmirhosseinHonardoust](https://github.com/AmirhosseinHonardoust)
 
 ## License
 
-This project is intended for educational and portfolio purposes.
+This project is intended for educational, research, and portfolio purposes.
 
-If you use or modify this project, please keep the limitations and responsible-use notes clear.
+If you use or modify this project, please keep the responsible-use notes and limitations clear.

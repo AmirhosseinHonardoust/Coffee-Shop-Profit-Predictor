@@ -10,14 +10,21 @@ from typing import Any
 import joblib
 import pandas as pd
 
-from config import (
+from coffee_shop_predictor.config import (
+    DEFAULT_SQL_PATH,
     FEATURE_LABELS,
     FEATURES,
     NEGATIVE_DRIVER_FEATURES,
     OUTPUT_FILES,
     POSITIVE_DRIVER_FEATURES,
 )
-from utils import ensure_outdir, load_json, save_csv, setup_logging, validate_dataframe
+from coffee_shop_predictor.utils import (
+    ensure_outdir,
+    load_json,
+    save_csv,
+    setup_logging,
+    validate_dataframe,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -151,7 +158,11 @@ def run_scoring(db_path: Path, sql_path: Path, model_path: Path, outdir: Path) -
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Score candidate coffee shop locations.")
     parser.add_argument("--db", default="coffee.db", help="SQLite DB path.")
-    parser.add_argument("--sql", default="src/queries.sql", help="Path to queries.sql.")
+    parser.add_argument(
+        "--sql",
+        default=str(DEFAULT_SQL_PATH),
+        help="Path to queries.sql (defaults to packaged SQL).",
+    )
     parser.add_argument("--model", default="outputs/model.joblib", help="Path to fitted model.")
     parser.add_argument("--outdir", default="outputs", help="Output directory.")
     return parser.parse_args()

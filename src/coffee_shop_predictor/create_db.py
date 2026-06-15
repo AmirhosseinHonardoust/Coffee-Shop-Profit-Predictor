@@ -9,8 +9,8 @@ from typing import Final
 
 import pandas as pd
 
-from config import REQUIRED_CANDIDATE_COLUMNS, REQUIRED_TRAIN_COLUMNS
-from utils import setup_logging, validate_dataframe
+from coffee_shop_predictor.config import REQUIRED_CANDIDATE_COLUMNS, REQUIRED_TRAIN_COLUMNS
+from coffee_shop_predictor.utils import setup_logging, validate_dataframe
 
 LOGGER = logging.getLogger(__name__)
 

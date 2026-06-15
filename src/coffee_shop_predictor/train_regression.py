@@ -21,8 +21,16 @@ from sklearn.model_selection import GridSearchCV, KFold, cross_validate, train_t
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-from config import CV_SPLITS, FEATURES, OUTPUT_FILES, RANDOM_STATE, TARGET, TEST_SIZE
-from utils import (
+from coffee_shop_predictor.config import (
+    CV_SPLITS,
+    DEFAULT_SQL_PATH,
+    FEATURES,
+    OUTPUT_FILES,
+    RANDOM_STATE,
+    TARGET,
+    TEST_SIZE,
+)
+from coffee_shop_predictor.utils import (
     ensure_outdir,
     plot_bar,
     plot_hist,
@@ -402,7 +410,11 @@ def run_training(db_path: Path, sql_path: Path, outdir: Path) -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Train coffee shop profit regression model.")
     parser.add_argument("--db", default="coffee.db", help="Path to SQLite DB.")
-    parser.add_argument("--sql", default="src/queries.sql", help="Path to queries.sql.")
+    parser.add_argument(
+        "--sql",
+        default=str(DEFAULT_SQL_PATH),
+        help="Path to queries.sql (defaults to packaged SQL).",
+    )
     parser.add_argument("--outdir", default="outputs", help="Output directory.")
     return parser.parse_args()
 

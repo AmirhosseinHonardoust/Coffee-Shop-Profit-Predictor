@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from config import COLUMN_RANGES
+from coffee_shop_predictor.config import COLUMN_RANGES
 
 PathLike = str | Path
 

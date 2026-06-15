@@ -4,7 +4,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Final
+
+# Location of this installed package, used to locate bundled data files
+# (e.g. queries.sql) independently of the current working directory.
+PACKAGE_DIR: Final[Path] = Path(__file__).resolve().parent
+DEFAULT_SQL_PATH: Final[Path] = PACKAGE_DIR / "queries.sql"
 
 RANDOM_STATE: Final[int] = 42
 TEST_SIZE: Final[float] = 0.25
