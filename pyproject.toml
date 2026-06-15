@@ -1,0 +1,33 @@
+# Tooling configuration for the Coffee Shop Profit Predictor.
+#
+# This file intentionally contains only [tool.*] sections: it configures
+# linting, formatting, and type checking without changing how the project
+# is imported or installed. Packaging (a [project] table + entry points)
+# is a separate, later change.
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+# `src` is on sys.path when scripts are run as `python src/<file>.py`,
+# so ruff should treat it as a first-party source root for import sorting.
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+# E/F: pycodestyle + pyflakes (correctness, unused imports/vars)
+# I:   import sorting (isort)
+# B:   flake8-bugbear (likely bugs)
+# SIM: flake8-simplify (readability)
+# UP:  pyupgrade (modern syntax for the target Python)
+select = ["E", "F", "I", "B", "SIM", "UP"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311", "py312"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_redundant_casts = true
+warn_unused_ignores = true
+# pandas, scikit-learn, and joblib do not ship type stubs / py.typed markers,
+# so their imports are treated as untyped rather than failing the type check.
+ignore_missing_imports = true
