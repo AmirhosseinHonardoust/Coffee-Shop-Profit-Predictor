@@ -3,14 +3,14 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable, Union
 
 import pandas as pd
 
 from config import COLUMN_RANGES
 
-PathLike = Union[str, Path]
+PathLike = str | Path
 
 
 def _get_pyplot():
