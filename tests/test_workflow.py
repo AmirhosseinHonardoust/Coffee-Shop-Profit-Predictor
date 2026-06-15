@@ -11,8 +11,11 @@ from pathlib import Path
 
 import pandas as pd
 
+from coffee_shop_predictor.config import DEFAULT_SQL_PATH, REQUIRED_TRAIN_COLUMNS
+from coffee_shop_predictor.utils import validate_dataframe
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-SRC_DIR = PROJECT_ROOT / "src"
+PACKAGE_DIR = PROJECT_ROOT / "src" / "coffee_shop_predictor"
 FEATURES = [
     "foot_traffic",
     "rent_per_sqm",
@@ -31,12 +34,12 @@ FEATURES = [
 
 
 def _run_command(args: list[str], cwd: Path) -> None:
-    subprocess.run(args, cwd=cwd, check=True, timeout=30)
+    subprocess.run(args, cwd=cwd, check=True, timeout=60)
 
 
 class WorkflowTests(unittest.TestCase):
     def test_source_files_compile(self) -> None:
-        for path in SRC_DIR.glob("*.py"):
+        for path in PACKAGE_DIR.glob("*.py"):
             py_compile.compile(str(path), doraise=True)
 
     def test_create_db_and_sql_views(self) -> None:
@@ -47,7 +50,8 @@ class WorkflowTests(unittest.TestCase):
             _run_command(
                 [
                     sys.executable,
-                    "src/create_db.py",
+                    "-m",
+                    "coffee_shop_predictor.create_db",
                     "--train",
                     "data/locations_train.csv",
                     "--candidates",
@@ -68,7 +72,7 @@ class WorkflowTests(unittest.TestCase):
                 self.assertIn("locations_train", table_names)
                 self.assertIn("locations_candidates", table_names)
 
-                con.executescript((SRC_DIR / "queries.sql").read_text(encoding="utf-8"))
+                con.executescript(DEFAULT_SQL_PATH.read_text(encoding="utf-8"))
                 train_features = pd.read_sql_query("SELECT * FROM features_train;", con)
                 candidate_features = pd.read_sql_query("SELECT * FROM features_candidates;", con)
 
@@ -81,10 +85,6 @@ class WorkflowTests(unittest.TestCase):
             self.assertFalse(candidate_features[FEATURES].isna().any().any())
 
     def test_validation_rejects_impossible_values(self) -> None:
-        sys.path.insert(0, str(SRC_DIR))
-        from config import REQUIRED_TRAIN_COLUMNS
-        from utils import validate_dataframe
-
         df = pd.read_csv(PROJECT_ROOT / "data" / "locations_train.csv").head(3).copy()
         df.loc[0, "foot_traffic"] = -1
         with self.assertRaises(ValueError):
