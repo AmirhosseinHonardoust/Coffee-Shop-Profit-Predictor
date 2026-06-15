@@ -11,8 +11,8 @@ import joblib
 import pandas as pd
 
 from config import (
-    FEATURES,
     FEATURE_LABELS,
+    FEATURES,
     NEGATIVE_DRIVER_FEATURES,
     OUTPUT_FILES,
     POSITIVE_DRIVER_FEATURES,
@@ -26,7 +26,9 @@ def _load_metadata(model_path: Path) -> dict[str, Any]:
     metadata_path = model_path.with_name(OUTPUT_FILES.metadata)
     if metadata_path.exists():
         return load_json(metadata_path)
-    LOGGER.warning("Model metadata not found at %s. Risk bands will use fallback values.", metadata_path)
+    LOGGER.warning(
+        "Model metadata not found at %s. Risk bands will use fallback values.", metadata_path
+    )
     return {
         "features": FEATURES,
         "feature_means": {},
@@ -59,7 +61,9 @@ def _risk_band(zscores: dict[str, float], metadata: dict[str, Any]) -> tuple[str
     return "high", float(distance), base_error * 1.35
 
 
-def _candidate_drivers(row: pd.Series, metadata: dict[str, Any], *, top_n: int = 3) -> tuple[str, str]:
+def _candidate_drivers(
+    row: pd.Series, metadata: dict[str, Any], *, top_n: int = 3
+) -> tuple[str, str]:
     zscores = _feature_zscores(row, metadata)
 
     positive: list[tuple[float, str]] = []
