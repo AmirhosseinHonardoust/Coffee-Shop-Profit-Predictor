@@ -6,6 +6,31 @@ on:
   workflow_dispatch:
 
 jobs:
+  lint:
+    name: Lint, format, and type check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install tooling
+        run: python -m pip install --upgrade pip ruff black mypy
+
+      - name: Ruff (lint + import order)
+        run: ruff check src tests
+
+      - name: Black (format check)
+        run: black --check src tests
+
+      - name: Mypy (type check)
+        run: mypy src --ignore-missing-imports
+
   test-and-run-workflow:
     name: Test project on Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest

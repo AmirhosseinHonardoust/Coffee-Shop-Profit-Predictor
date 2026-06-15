@@ -3,10 +3,10 @@ from __future__ import annotations
 import py_compile
 import sqlite3
 import subprocess
-from contextlib import closing
 import sys
 import tempfile
 import unittest
+from contextlib import closing
 from pathlib import Path
 
 import pandas as pd

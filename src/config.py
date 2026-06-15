@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Central configuration for the Coffee Shop Profit Predictor project."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

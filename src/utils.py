@@ -3,14 +3,14 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable, Union
 
 import pandas as pd
 
 from config import COLUMN_RANGES
 
-PathLike = Union[str, Path]
+PathLike = str | Path
 
 
 def _get_pyplot():
@@ -117,17 +117,17 @@ def plot_scatter_actual_vs_pred(
 
     plt = _get_pyplot()
 
-    y_true = np.asarray(list(y_true), dtype=float)
-    y_pred = np.asarray(list(y_pred), dtype=float)
+    actual = np.asarray(list(y_true), dtype=float)
+    predicted = np.asarray(list(y_pred), dtype=float)
 
     fig, ax = plt.subplots(figsize=(7, 6))
-    ax.scatter(y_true, y_pred)
+    ax.scatter(actual, predicted)
     ax.set_xlabel("Actual profit (€)")
     ax.set_ylabel("Predicted profit (€)")
     ax.set_title(title)
 
-    lo = float(min(y_true.min(), y_pred.min()))
-    hi = float(max(y_true.max(), y_pred.max()))
+    lo = float(min(actual.min(), predicted.min()))
+    hi = float(max(actual.max(), predicted.max()))
     ax.plot([lo, hi], [lo, hi])
 
     fig.tight_layout()
