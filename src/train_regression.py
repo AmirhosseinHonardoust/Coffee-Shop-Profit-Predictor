@@ -167,11 +167,15 @@ def _evaluate_candidates(
             }
         )
 
-    comparison = pd.DataFrame(rows).sort_values("cv_mae_mean", ascending=True).reset_index(drop=True)
+    comparison = (
+        pd.DataFrame(rows).sort_values("cv_mae_mean", ascending=True).reset_index(drop=True)
+    )
     return comparison, fitted_estimators
 
 
-def _selected_model_cv(estimator: Pipeline, X: pd.DataFrame, y: pd.Series, cv: KFold) -> dict[str, float]:
+def _selected_model_cv(
+    estimator: Pipeline, X: pd.DataFrame, y: pd.Series, cv: KFold
+) -> dict[str, float]:
     scores = cross_validate(
         estimator,
         X,
@@ -191,7 +195,9 @@ def _selected_model_cv(estimator: Pipeline, X: pd.DataFrame, y: pd.Series, cv: K
     }
 
 
-def _feature_importance(estimator: Pipeline, X_test: pd.DataFrame, y_test: pd.Series) -> pd.DataFrame:
+def _feature_importance(
+    estimator: Pipeline, X_test: pd.DataFrame, y_test: pd.Series
+) -> pd.DataFrame:
     """Estimate feature importance for the selected model.
 
     Linear models use standardized coefficients for speed and interpretability.
@@ -291,7 +297,9 @@ def run_training(db_path: Path, sql_path: Path, outdir: Path) -> None:
     LOGGER.info("Saved model comparison chart")
 
     non_baseline = comparison[comparison["model"] != "MeanBaseline"]
-    selected_model = str(non_baseline.iloc[0]["model"] if not non_baseline.empty else comparison.iloc[0]["model"])
+    selected_model = str(
+        non_baseline.iloc[0]["model"] if not non_baseline.empty else comparison.iloc[0]["model"]
+    )
     holdout_estimator = fitted_estimators[selected_model]
     baseline_row = comparison[comparison["model"] == "MeanBaseline"].iloc[0]
 
@@ -337,7 +345,11 @@ def run_training(db_path: Path, sql_path: Path, outdir: Path) -> None:
         "selection_rule": "lowest mean CV MAE among non-baseline models on the training split",
         "random_state": RANDOM_STATE,
         "test_size": TEST_SIZE,
-        "rows": {"total": int(len(train_df)), "train": int(len(X_train)), "holdout_test": int(len(X_test))},
+        "rows": {
+            "total": int(len(train_df)),
+            "train": int(len(X_train)),
+            "holdout_test": int(len(X_test)),
+        },
         "holdout": {
             "r2": holdout_r2,
             "mae": holdout_mae,
@@ -366,7 +378,9 @@ def run_training(db_path: Path, sql_path: Path, outdir: Path) -> None:
     predictions_all = train_df[["lat", "lon"]].copy()
     predictions_all["actual_profit"] = y.values
     predictions_all["predicted_profit"] = final_model.predict(X)
-    predictions_all["residual"] = predictions_all["actual_profit"] - predictions_all["predicted_profit"]
+    predictions_all["residual"] = (
+        predictions_all["actual_profit"] - predictions_all["predicted_profit"]
+    )
     save_csv(predictions_all, outdir / OUTPUT_FILES.predictions_all)
     LOGGER.info("Saved all-row predictions")
 
