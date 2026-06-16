@@ -29,12 +29,12 @@ A machine learning project that turns coffee-shop location data into a **monthly
 - [Project Structure](#project-structure)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
-- [Generating Data](#generating-data)
 - [Building the Database](#building-the-database)
 - [Training the Model](#training-the-model)
 - [Scoring Candidate Sites](#scoring-candidate-sites)
 - [SQL Feature Engineering](#sql-feature-engineering)
 - [Model Output](#model-output)
+- [Prediction Intervals](#prediction-intervals)
 - [Model Artifacts and Loading Safety](#model-artifacts-and-loading-safety)
 - [Evaluation Metrics](#evaluation-metrics)
 - [Visual Reports](#visual-reports)
@@ -178,14 +178,12 @@ Coffee-Shop-Profit-Predictor/
 │       ├── __init__.py
 │       ├── config.py
 │       ├── create_db.py
-│       ├── generate_data.py
 │       ├── queries.sql
 │       ├── score_new_sites.py
 │       ├── train_regression.py
 │       └── utils.py
 │
 ├── tests/
-│   ├── test_generate_data.py
 │   ├── test_scoring.py
 │   ├── test_training.py
 │   └── test_workflow.py
@@ -228,7 +226,7 @@ source .venv/bin/activate
 
 ### 3. Install the Package
 
-Install in editable mode. This pulls in all dependencies and registers the `coffee-generate-data`, `coffee-build-db`, `coffee-train`, and `coffee-score` commands:
+Install in editable mode. This pulls in all dependencies and registers the `coffee-build-db`, `coffee-train`, and `coffee-score` commands:
 
 ```bash
 pip install -e .
@@ -261,29 +259,6 @@ Score candidate sites:
 ```bash
 coffee-score
 ```
-
----
-
-## Generating Data
-
-The bundled CSVs are the project's reference sample. To regenerate them, scale
-them, or create fresh variations, use the seeded generator. It samples features
-from documented distributions and computes `profit` from a transparent linear
-formula plus Gaussian noise (see the module docstring for the full
-specification).
-
-```bash
-coffee-generate-data --n-train 220 --n-candidates 60 --seed 42 --out-dir data/generated
-```
-
-- The same `--seed` always produces the same data.
-- Calibrated to the reference sample: a model trained on generated data lands at
-  a comparable cross-validated R² (about 0.53–0.56).
-- Writing to `--out-dir data` overwrites the bundled CSVs, so the default is
-  shown here pointing at a separate directory.
-
-> The signs in the profit formula match the documented business priors: rent and
-> competition reduce profit, every other feature increases it.
 
 ---
 
@@ -399,9 +374,11 @@ Candidate scoring returns ranked results with the following fields:
 |---|---|
 | `rank` | Candidate rank by predicted monthly profit |
 | `lat`, `lon` | Candidate coordinates |
-| `predicted_profit` | Estimated monthly profit in euros |
-| `risk_band` | Heuristic risk level based on feature-profile distance |
-| `expected_error_eur` | Approximate expected error based on model MAE |
+| `predicted_profit` | Point estimate of monthly profit in euros |
+| `prediction_low_eur`, `prediction_high_eur` | Lower/upper bound of the conformal prediction interval |
+| `interval_coverage` | Target coverage of the interval (e.g. 0.80) |
+| `interval_half_width_eur` | Half-width of the interval (the `±` value) |
+| `risk_band` | Extrapolation-risk level from feature-profile distance |
 | `profile_distance` | Distance from the training-data feature profile |
 | `main_positive_drivers` | Business-readable features helping the score |
 | `main_negative_drivers` | Business-readable features hurting the score |
@@ -413,12 +390,34 @@ Example ranked result:
 ```text
 Rank: 1
 Predicted profit: €2,004.10
-Risk band: high
+80% interval: €1,415.21 - €2,592.99  (half-width ±€588.89)
+Risk band: high  (profile distance 1.32)
 Main positive drivers: high competition-adjusted promotion; high competition-adjusted demand; high coffee price
 Main negative drivers: no major red flags
 ```
 
-> The risk band is a practical warning flag based on how far a candidate sits from the training profile, not a formal statistical confidence interval.
+> Two complementary signals: the prediction interval quantifies uncertainty around the point estimate, while the risk band flags how far the candidate sits from the training profile (extrapolation risk). A candidate can have a tight interval but still be high-risk if its feature profile is unusual.
+
+---
+
+## Prediction Intervals
+
+Each prediction comes with an interval, not just a point estimate. The interval
+is built with **split-conformal prediction** on the holdout residuals:
+
+- compute the absolute residuals on the holdout set
+- take the quantile of those residuals at the target coverage level
+- report each prediction as `predicted_profit ± half_width`
+
+This is distribution-free and gives approximate marginal coverage under
+exchangeability: roughly `interval_coverage` of true values are expected to fall
+inside the interval. The empirical coverage on the holdout set is recorded in
+`metrics.json` as a sanity check.
+
+The default target coverage is 80% (`PREDICTION_INTERVAL_COVERAGE` in
+`config.py`). The interval width is the same for every candidate, which is the
+standard behaviour of basic split conformal; per-candidate extrapolation risk is
+communicated separately through the risk band.
 
 ---
 
@@ -447,6 +446,7 @@ Evaluation uses a train/holdout split with cross-validation on the training spli
 | Holdout MAE | Average euro error on unseen data |
 | Mean-baseline R² / MAE | Honest floor: what predicting the average achieves |
 | 5-fold CV R² / MAE | Stability of the estimate across folds |
+| Interval coverage | Empirical share of holdout actuals inside the 80% interval |
 
 </div>
 
@@ -462,6 +462,8 @@ The current run selects **ElasticNet** (`alpha = 0.5`, `l1_ratio = 0.8`):
 | Mean baseline MAE | €699.39 |
 | 5-fold CV R² | 0.530 ± 0.110 |
 | 5-fold CV MAE | €413.67 ± €46.65 |
+| 80% interval half-width | ±€588.89 |
+| Empirical interval coverage (holdout) | 81.8% |
 
 </div>
 
@@ -530,7 +532,6 @@ The GitHub Actions workflow checks:
 - format checking with Black
 - type checking with mypy
 - unit tests
-- a synthetic data generation smoke run
 - a full training and scoring smoke workflow
 - training artifact and output validation
 - artifact upload across Python 3.10, 3.11, and 3.12
@@ -574,8 +575,6 @@ The bundled dataset contains:
 220 training locations
 60 candidate locations
 ```
-
-The bundled CSVs are reproducible through `coffee-generate-data`, which samples each feature from a documented distribution and synthesizes `profit` from a transparent linear formula plus noise. This keeps the dataset parameterizable (size and seed) and makes the generative process auditable rather than opaque.
 
 The data is suitable for demonstrating a portfolio machine learning workflow, but it should not be treated as verified real business data. If the project is later connected to real data, this section should be updated with the data source, collection period, geographic coverage, feature definitions, usage permissions, and known data quality issues.
 
@@ -624,10 +623,10 @@ Any real deployment would require diverse, validated data, total-cost modeling, 
 
 Potential next improvements:
 
+- Add a reproducible synthetic data generator with documented distributions
 - Add real store size and compute total monthly rent
 - Add labor cost, cost of goods sold, opening hours, and seasonality
 - Add competitor density and quality using geographic distance
-- Add bootstrapped or quantile prediction intervals
 - Add SHAP or permutation-importance explanations
 - Add map-based candidate visualization
 - Add a Streamlit dashboard and Docker support
