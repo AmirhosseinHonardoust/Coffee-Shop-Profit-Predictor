@@ -63,9 +63,7 @@ jobs:
 
       - name: Run full ML workflow
         run: |
-          coffee-build-db --train data/locations_train.csv --candidates data/locations_candidates.csv
-          coffee-train
-          coffee-score
+          coffee-pipeline
 
       - name: Verify expected outputs
         run: |
