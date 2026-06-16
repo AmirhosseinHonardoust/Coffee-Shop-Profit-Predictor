@@ -26,6 +26,7 @@ from coffee_shop_predictor.config import (
     DEFAULT_SQL_PATH,
     FEATURES,
     OUTPUT_FILES,
+    PREDICTION_INTERVAL_COVERAGE,
     RANDOM_STATE,
     TARGET,
     TEST_SIZE,
@@ -245,12 +246,30 @@ def _feature_importance(
     return importance.sort_values("importance", ascending=False).reset_index(drop=True)
 
 
+def _conformal_half_width(residuals: pd.Series, coverage: float) -> tuple[float, float]:
+    """Split-conformal symmetric prediction-interval half-width from holdout residuals.
+
+    Returns the additive half-width ``q`` such that ``[pred - q, pred + q]`` covers
+    a new target with approximately ``coverage`` probability under exchangeability,
+    along with the empirical coverage of that half-width on the holdout residuals.
+    """
+    abs_residuals = np.abs(residuals.to_numpy(dtype=float))
+    n = abs_residuals.size
+    # Finite-sample conformal quantile level: ceil((n + 1) * coverage) / n, capped at 1.
+    level = min(1.0, np.ceil((n + 1) * coverage) / n)
+    half_width = float(np.quantile(abs_residuals, level))
+    empirical = float(np.mean(abs_residuals <= half_width))
+    return half_width, empirical
+
+
 def _make_metadata(
     selected_model: str,
     X: pd.DataFrame,
     holdout_mae: float,
     cv_mae_mean: float,
     cv_mae_std: float,
+    interval_coverage: float,
+    interval_half_width: float,
 ) -> dict[str, Any]:
     means = X[FEATURES].mean()
     stds = X[FEATURES].std(ddof=0).replace(0, 1)
@@ -263,6 +282,8 @@ def _make_metadata(
         "risk_distance_q75": float(average_abs_z.quantile(0.75)),
         "risk_distance_q95": float(average_abs_z.quantile(0.95)),
         "expected_mae_eur": float(max(holdout_mae, cv_mae_mean)),
+        "interval_coverage": float(interval_coverage),
+        "interval_half_width_eur": float(interval_half_width),
         "cv_mae_mean": float(cv_mae_mean),
         "cv_mae_std": float(cv_mae_std),
     }
@@ -348,6 +369,10 @@ def run_training(db_path: Path, sql_path: Path, outdir: Path) -> None:
     holdout_mae = float(mean_absolute_error(y_test, y_pred_test))
     holdout_r2 = float(r2_score(y_test, y_pred_test))
 
+    interval_half_width, interval_empirical_coverage = _conformal_half_width(
+        residuals, PREDICTION_INTERVAL_COVERAGE
+    )
+
     metrics = {
         "selected_model": selected_model,
         "selection_rule": "lowest mean CV MAE among non-baseline models on the training split",
@@ -363,6 +388,12 @@ def run_training(db_path: Path, sql_path: Path, outdir: Path) -> None:
             "mae": holdout_mae,
             "baseline_r2": float(baseline_row["holdout_r2"]),
             "baseline_mae": float(baseline_row["holdout_mae"]),
+            "prediction_interval": {
+                "method": "split_conformal_absolute_residual",
+                "target_coverage": PREDICTION_INTERVAL_COVERAGE,
+                "half_width_eur": interval_half_width,
+                "empirical_coverage_holdout": interval_empirical_coverage,
+            },
         },
         "cross_validation_selected_model_full_data": {
             "cv_splits": CV_SPLITS,
@@ -398,6 +429,8 @@ def run_training(db_path: Path, sql_path: Path, outdir: Path) -> None:
         holdout_mae=holdout_mae,
         cv_mae_mean=selected_cv["mae_mean"],
         cv_mae_std=selected_cv["mae_std"],
+        interval_coverage=PREDICTION_INTERVAL_COVERAGE,
+        interval_half_width=interval_half_width,
     )
     save_json(metadata, outdir / OUTPUT_FILES.metadata)
     LOGGER.info("Saved metadata")
