@@ -29,6 +29,7 @@ A machine learning project that turns coffee-shop location data into a **monthly
 - [Project Structure](#project-structure)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
+- [Generating Data](#generating-data)
 - [Building the Database](#building-the-database)
 - [Training the Model](#training-the-model)
 - [Scoring Candidate Sites](#scoring-candidate-sites)
@@ -177,12 +178,16 @@ Coffee-Shop-Profit-Predictor/
 │       ├── __init__.py
 │       ├── config.py
 │       ├── create_db.py
+│       ├── generate_data.py
 │       ├── queries.sql
 │       ├── score_new_sites.py
 │       ├── train_regression.py
 │       └── utils.py
 │
 ├── tests/
+│   ├── test_generate_data.py
+│   ├── test_scoring.py
+│   ├── test_training.py
 │   └── test_workflow.py
 │
 ├── .gitignore
@@ -223,7 +228,7 @@ source .venv/bin/activate
 
 ### 3. Install the Package
 
-Install in editable mode. This pulls in all dependencies and registers the `coffee-build-db`, `coffee-train`, and `coffee-score` commands:
+Install in editable mode. This pulls in all dependencies and registers the `coffee-generate-data`, `coffee-build-db`, `coffee-train`, and `coffee-score` commands:
 
 ```bash
 pip install -e .
@@ -256,6 +261,29 @@ Score candidate sites:
 ```bash
 coffee-score
 ```
+
+---
+
+## Generating Data
+
+The bundled CSVs are the project's reference sample. To regenerate them, scale
+them, or create fresh variations, use the seeded generator. It samples features
+from documented distributions and computes `profit` from a transparent linear
+formula plus Gaussian noise (see the module docstring for the full
+specification).
+
+```bash
+coffee-generate-data --n-train 220 --n-candidates 60 --seed 42 --out-dir data/generated
+```
+
+- The same `--seed` always produces the same data.
+- Calibrated to the reference sample: a model trained on generated data lands at
+  a comparable cross-validated R² (about 0.53–0.56).
+- Writing to `--out-dir data` overwrites the bundled CSVs, so the default is
+  shown here pointing at a separate directory.
+
+> The signs in the profit formula match the documented business priors: rent and
+> competition reduce profit, every other feature increases it.
 
 ---
 
@@ -427,7 +455,7 @@ The current run selects **ElasticNet** (`alpha = 0.5`, `l1_ratio = 0.8`):
 <div align="center">
 
 | Metric | Value |
-|---|---:|
+|---|---|
 | Holdout R² | 0.647 |
 | Holdout MAE | €383.58 |
 | Mean baseline R² | -0.030 |
@@ -469,6 +497,18 @@ The current run selects **ElasticNet** (`alpha = 0.5`, `l1_ratio = 0.8`):
 
 ## Testing and CI
 
+The test suite covers both the workflow and the business logic that candidate
+scoring exposes:
+
+- source files compile and the CSV-to-SQLite load builds the expected views
+- input validation rejects impossible values
+- the data generator is deterministic for a fixed seed and passes validation
+- feature z-scores honor the metadata mean/std (with a zero-std fallback)
+- risk bands map distances to low / medium / high and apply the error multipliers
+- driver explanations surface high competition and low rent correctly, cap at
+  `top_n`, and fall back to "balanced profile" / "no major red flags"
+- a training smoke run writes every artifact and beats the mean baseline
+
 Run unit tests locally:
 
 ```bash
@@ -490,6 +530,7 @@ The GitHub Actions workflow checks:
 - format checking with Black
 - type checking with mypy
 - unit tests
+- a synthetic data generation smoke run
 - a full training and scoring smoke workflow
 - training artifact and output validation
 - artifact upload across Python 3.10, 3.11, and 3.12
@@ -533,6 +574,8 @@ The bundled dataset contains:
 220 training locations
 60 candidate locations
 ```
+
+The bundled CSVs are reproducible through `coffee-generate-data`, which samples each feature from a documented distribution and synthesizes `profit` from a transparent linear formula plus noise. This keeps the dataset parameterizable (size and seed) and makes the generative process auditable rather than opaque.
 
 The data is suitable for demonstrating a portfolio machine learning workflow, but it should not be treated as verified real business data. If the project is later connected to real data, this section should be updated with the data source, collection period, geographic coverage, feature definitions, usage permissions, and known data quality issues.
 
@@ -581,7 +624,6 @@ Any real deployment would require diverse, validated data, total-cost modeling, 
 
 Potential next improvements:
 
-- Add a reproducible synthetic data generator with documented distributions
 - Add real store size and compute total monthly rent
 - Add labor cost, cost of goods sold, opening hours, and seasonality
 - Add competitor density and quality using geographic distance
