@@ -8,19 +8,20 @@ from pathlib import Path
 
 from coffee_shop_predictor.config import DEFAULT_SQL_PATH
 from coffee_shop_predictor.create_db import load_csvs_to_db
-from coffee_shop_predictor.generate_data import write_datasets
 from coffee_shop_predictor.train_regression import run_training
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DATA_DIR = PROJECT_ROOT / "data"
 
 
 class TrainingSmokeTests(unittest.TestCase):
     def test_training_writes_artifacts_and_beats_baseline(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
-            write_datasets(tmp_path, n_train=160, n_candidates=20, seed=123)
             db_path = tmp_path / "coffee.db"
             load_csvs_to_db(
-                tmp_path / "locations_train.csv",
-                tmp_path / "locations_candidates.csv",
+                DATA_DIR / "locations_train.csv",
+                DATA_DIR / "locations_candidates.csv",
                 db_path,
             )
             outdir = tmp_path / "outputs"
