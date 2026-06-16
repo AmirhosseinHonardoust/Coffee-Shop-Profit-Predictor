@@ -43,6 +43,8 @@ def _load_metadata(model_path: Path) -> dict[str, Any]:
         "risk_distance_q75": 0.8,
         "risk_distance_q95": 1.2,
         "expected_mae_eur": 400.0,
+        "interval_coverage": 0.80,
+        "interval_half_width_eur": 640.0,
     }
 
 
@@ -55,17 +57,29 @@ def _feature_zscores(row: pd.Series, metadata: dict[str, Any]) -> dict[str, floa
     return zscores
 
 
-def _risk_band(zscores: dict[str, float], metadata: dict[str, Any]) -> tuple[str, float, float]:
+def _risk_band(zscores: dict[str, float], metadata: dict[str, Any]) -> tuple[str, float]:
+    """Classify how far a candidate's feature profile is from the training data.
+
+    This is an extrapolation-risk signal (how unusual the candidate looks), not a
+    prediction interval; uncertainty around the point estimate is reported
+    separately via the conformal interval.
+    """
     distance = sum(abs(v) for v in zscores.values()) / max(len(zscores), 1)
     q75 = float(metadata.get("risk_distance_q75", 0.8))
     q95 = float(metadata.get("risk_distance_q95", 1.2))
-    base_error = float(metadata.get("expected_mae_eur", 400.0))
 
     if distance <= q75:
-        return "low", float(distance), base_error
+        return "low", float(distance)
     if distance <= q95:
-        return "medium", float(distance), base_error * 1.15
-    return "high", float(distance), base_error * 1.35
+        return "medium", float(distance)
+    return "high", float(distance)
+
+
+def _interval_half_width(metadata: dict[str, Any]) -> float:
+    """Conformal prediction-interval half-width in euros, with a safe fallback."""
+    return float(
+        metadata.get("interval_half_width_eur", 1.6 * metadata.get("expected_mae_eur", 400.0))
+    )
 
 
 def _candidate_drivers(
@@ -114,25 +128,29 @@ def run_scoring(db_path: Path, sql_path: Path, model_path: Path, outdir: Path) -
     scored = scored.sort_values("predicted_profit", ascending=False).reset_index(drop=True)
     scored.insert(0, "rank", range(1, len(scored) + 1))
 
+    half_width = _interval_half_width(metadata)
+    coverage = float(metadata.get("interval_coverage", 0.80))
+
     risk_bands: list[str] = []
     profile_distances: list[float] = []
-    expected_errors: list[float] = []
     positive_drivers: list[str] = []
     negative_drivers: list[str] = []
 
     for _, row in scored.iterrows():
         zscores = _feature_zscores(row, metadata)
-        risk, distance, expected_error = _risk_band(zscores, metadata)
+        risk, distance = _risk_band(zscores, metadata)
         pos, neg = _candidate_drivers(row, metadata)
         risk_bands.append(risk)
         profile_distances.append(distance)
-        expected_errors.append(expected_error)
         positive_drivers.append(pos)
         negative_drivers.append(neg)
 
+    scored["prediction_low_eur"] = scored["predicted_profit"] - half_width
+    scored["prediction_high_eur"] = scored["predicted_profit"] + half_width
+    scored["interval_half_width_eur"] = half_width
+    scored["interval_coverage"] = coverage
     scored["risk_band"] = risk_bands
     scored["profile_distance"] = profile_distances
-    scored["expected_error_eur"] = expected_errors
     scored["main_positive_drivers"] = positive_drivers
     scored["main_negative_drivers"] = negative_drivers
 
@@ -142,9 +160,12 @@ def run_scoring(db_path: Path, sql_path: Path, model_path: Path, outdir: Path) -
         "lat",
         "lon",
         "predicted_profit",
+        "prediction_low_eur",
+        "prediction_high_eur",
+        "interval_coverage",
         "risk_band",
-        "expected_error_eur",
         "profile_distance",
+        "interval_half_width_eur",
         "main_positive_drivers",
         "main_negative_drivers",
     ]
