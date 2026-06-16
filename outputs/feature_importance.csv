@@ -1,0 +1,14 @@
+feature,importance,signed_effect,importance_type
+events_per_month,276.2008260707061,276.2008260707061,standardized_coefficient
+rent_per_sqm,223.59398606137023,-223.59398606137023,standardized_coefficient
+demand_adj,156.65572212841903,156.65572212841903,standardized_coefficient
+price_income,155.9719290015387,155.9719290015387,standardized_coefficient
+median_income,138.30050657508036,138.30050657508036,standardized_coefficient
+promo_comp_adj,132.2455964039321,132.2455964039321,standardized_coefficient
+office_density,100.0768320497389,100.0768320497389,standardized_coefficient
+wknd_traffic,50.8678933883211,50.8678933883211,standardized_coefficient
+weekend_activity,43.40672875181246,43.40672875181246,standardized_coefficient
+foot_traffic,39.87254631774094,39.87254631774094,standardized_coefficient
+promo_spend,34.64820959482193,34.64820959482193,standardized_coefficient
+coffee_price,30.67244277639808,-30.67244277639808,standardized_coefficient
+competition,17.824714981309892,17.824714981309892,standardized_coefficient
