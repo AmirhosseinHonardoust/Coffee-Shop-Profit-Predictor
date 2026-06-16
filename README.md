@@ -29,6 +29,7 @@ A machine learning project that turns coffee-shop location data into a **monthly
 - [Project Structure](#project-structure)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
+- [Generating Data](#generating-data)
 - [Building the Database](#building-the-database)
 - [Training the Model](#training-the-model)
 - [Scoring Candidate Sites](#scoring-candidate-sites)
@@ -178,6 +179,7 @@ Coffee-Shop-Profit-Predictor/
 │       ├── __init__.py
 │       ├── config.py
 │       ├── create_db.py
+│       ├── generate_data.py
 │       ├── queries.sql
 │       ├── run_pipeline.py
 │       ├── score_new_sites.py
@@ -185,6 +187,7 @@ Coffee-Shop-Profit-Predictor/
 │       └── utils.py
 │
 ├── tests/
+│   ├── test_generate_data.py
 │   ├── test_pipeline.py
 │   ├── test_scoring.py
 │   ├── test_training.py
@@ -229,7 +232,7 @@ source .venv/bin/activate
 
 ### 3. Install the Package
 
-Install in editable mode. This pulls in all dependencies and registers the `coffee-build-db`, `coffee-train`, `coffee-score`, and `coffee-pipeline` commands:
+Install in editable mode. This pulls in all dependencies and registers the `coffee-generate-data`, `coffee-build-db`, `coffee-train`, `coffee-score`, and `coffee-pipeline` commands:
 
 ```bash
 pip install -e .
@@ -278,6 +281,28 @@ Score candidate sites:
 ```bash
 coffee-score
 ```
+
+---
+
+## Generating Data
+
+The bundled CSVs are reproducible through a seeded generator. It samples each
+feature from a documented distribution and synthesizes `profit` from a
+transparent linear formula plus Gaussian noise (full specification in the
+`generate_data.py` module docstring).
+
+```bash
+coffee-generate-data --n-train 220 --n-candidates 60 --seed 42 --out-dir data/generated
+```
+
+- The same `--seed` always produces the same data.
+- Calibrated to the reference sample: a model trained on generated data reaches a
+  comparable cross-validated R² (about 0.53-0.56).
+- Writing to `--out-dir data` overwrites the bundled CSVs, so the example points
+  at a separate directory.
+
+> The signs in the profit formula match the documented business priors: rent and
+> competition reduce profit, every other feature increases it.
 
 ---
 
@@ -524,6 +549,7 @@ scoring exposes:
 - source files compile and the CSV-to-SQLite load builds the expected views
 - input validation rejects impossible values
 - the data generator is deterministic for a fixed seed and passes validation
+- the data generator is deterministic for a fixed seed and passes validation
 - feature z-scores honor the metadata mean/std (with a zero-std fallback)
 - risk bands map distances to low / medium / high and apply the error multipliers
 - driver explanations surface high competition and low rent correctly, cap at
@@ -596,6 +622,8 @@ The bundled dataset contains:
 60 candidate locations
 ```
 
+The bundled CSVs are reproducible through `coffee-generate-data`, which samples each feature from a documented distribution and synthesizes `profit` from a transparent linear formula plus noise. This keeps the dataset parameterizable (size and seed) and makes the generative process auditable rather than opaque.
+
 The data is suitable for demonstrating a portfolio machine learning workflow, but it should not be treated as verified real business data. If the project is later connected to real data, this section should be updated with the data source, collection period, geographic coverage, feature definitions, usage permissions, and known data quality issues.
 
 ---
@@ -643,7 +671,6 @@ Any real deployment would require diverse, validated data, total-cost modeling, 
 
 Potential next improvements:
 
-- Add a reproducible synthetic data generator with documented distributions
 - Add real store size and compute total monthly rent
 - Add labor cost, cost of goods sold, opening hours, and seasonality
 - Add competitor density and quality using geographic distance
