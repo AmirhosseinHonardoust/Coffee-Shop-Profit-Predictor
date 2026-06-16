@@ -1,7 +1,7 @@
-.PHONY: help install dev lint format test pipeline clean
+.PHONY: help install dev lint format test pipeline generate clean
 
 help:
-	@echo "Targets: install dev lint format test pipeline clean"
+	@echo "Targets: install dev lint format test pipeline generate clean"
 
 install:  ## Install the package
 	pip install -e .
@@ -24,6 +24,9 @@ test:  ## Run the unit tests
 
 pipeline:  ## Build the DB, train, and score in one step
 	coffee-pipeline
+
+generate:  ## Regenerate the synthetic dataset (overwrites data/)
+	coffee-generate-data
 
 clean:  ## Remove generated artifacts and caches
 	rm -rf outputs coffee.db .pytest_cache .ruff_cache .mypy_cache
