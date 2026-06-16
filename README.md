@@ -179,17 +179,20 @@ Coffee-Shop-Profit-Predictor/
 │       ├── config.py
 │       ├── create_db.py
 │       ├── queries.sql
+│       ├── run_pipeline.py
 │       ├── score_new_sites.py
 │       ├── train_regression.py
 │       └── utils.py
 │
 ├── tests/
+│   ├── test_pipeline.py
 │   ├── test_scoring.py
 │   ├── test_training.py
 │   └── test_workflow.py
 │
 ├── .gitignore
 ├── .pre-commit-config.yaml
+├── Makefile
 ├── pyproject.toml
 ├── README.md
 └── requirements.txt
@@ -226,7 +229,7 @@ source .venv/bin/activate
 
 ### 3. Install the Package
 
-Install in editable mode. This pulls in all dependencies and registers the `coffee-build-db`, `coffee-train`, and `coffee-score` commands:
+Install in editable mode. This pulls in all dependencies and registers the `coffee-build-db`, `coffee-train`, `coffee-score`, and `coffee-pipeline` commands:
 
 ```bash
 pip install -e .
@@ -238,9 +241,25 @@ For development tools (Ruff, Black, mypy, pre-commit):
 pip install -e ".[dev]"
 ```
 
+If you have `make`, `make dev` does the same and installs the pre-commit hooks.
+
 ---
 
 ## Quick Start
+
+Run the entire workflow (build database, train, score) with one command:
+
+```bash
+coffee-pipeline
+```
+
+Or with `make`:
+
+```bash
+make pipeline
+```
+
+To run the stages individually instead:
 
 Build the database:
 
@@ -510,6 +529,7 @@ scoring exposes:
 - driver explanations surface high competition and low rent correctly, cap at
   `top_n`, and fall back to "balanced profile" / "no major red flags"
 - a training smoke run writes every artifact and beats the mean baseline
+- an end-to-end pipeline run produces ranked candidates with prediction intervals
 
 Run unit tests locally:
 
