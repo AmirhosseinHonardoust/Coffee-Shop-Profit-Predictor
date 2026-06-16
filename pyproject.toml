@@ -26,6 +26,7 @@ coffee-build-db = "coffee_shop_predictor.create_db:main"
 coffee-train = "coffee_shop_predictor.train_regression:main"
 coffee-score = "coffee_shop_predictor.score_new_sites:main"
 coffee-pipeline = "coffee_shop_predictor.run_pipeline:main"
+coffee-generate-data = "coffee_shop_predictor.generate_data:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
