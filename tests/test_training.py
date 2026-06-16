@@ -55,6 +55,18 @@ class TrainingSmokeTests(unittest.TestCase):
             # The selected model must improve over a mean baseline.
             self.assertLess(holdout["mae"], holdout["baseline_mae"])
             self.assertGreater(holdout["r2"], holdout["baseline_r2"])
+
+            # A conformal prediction interval is reported and roughly achieves coverage.
+            interval = holdout["prediction_interval"]
+            self.assertGreater(interval["half_width_eur"], 0.0)
+            self.assertGreaterEqual(
+                interval["empirical_coverage_holdout"], interval["target_coverage"] - 0.05
+            )
+
+            metadata = json.loads((outdir / "model_metadata.json").read_text(encoding="utf-8"))
+            self.assertIn("interval_half_width_eur", metadata)
+            self.assertIn("interval_coverage", metadata)
+
             # Guard against the smoke test silently becoming slow.
             self.assertLess(elapsed, 60.0)
 

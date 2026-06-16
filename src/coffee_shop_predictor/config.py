@@ -15,6 +15,9 @@ DEFAULT_SQL_PATH: Final[Path] = PACKAGE_DIR / "queries.sql"
 RANDOM_STATE: Final[int] = 42
 TEST_SIZE: Final[float] = 0.25
 CV_SPLITS: Final[int] = 5
+
+# Target coverage for split-conformal prediction intervals (e.g. 0.80 = 80%).
+PREDICTION_INTERVAL_COVERAGE: Final[float] = 0.80
 TARGET: Final[str] = "profit"
 
 RAW_FEATURES: Final[list[str]] = [

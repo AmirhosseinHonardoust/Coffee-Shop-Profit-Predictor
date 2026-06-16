@@ -8,6 +8,7 @@ from coffee_shop_predictor.config import FEATURES
 from coffee_shop_predictor.score_new_sites import (
     _candidate_drivers,
     _feature_zscores,
+    _interval_half_width,
     _risk_band,
 )
 
@@ -55,24 +56,32 @@ class FeatureZScoreTests(unittest.TestCase):
 
 class RiskBandTests(unittest.TestCase):
     def test_low_band_below_q75(self) -> None:
-        band, distance, error = _risk_band({"a": 0.5}, _standard_metadata())
+        band, distance = _risk_band({"a": 0.5}, _standard_metadata())
         self.assertEqual(band, "low")
         self.assertAlmostEqual(distance, 0.5)
-        self.assertAlmostEqual(error, 400.0)
 
     def test_medium_band_between_thresholds(self) -> None:
-        band, distance, error = _risk_band({"a": 1.0}, _standard_metadata())
+        band, _ = _risk_band({"a": 1.0}, _standard_metadata())
         self.assertEqual(band, "medium")
-        self.assertAlmostEqual(error, 400.0 * 1.15)
 
     def test_high_band_above_q95(self) -> None:
-        band, distance, error = _risk_band({"a": 1.5}, _standard_metadata())
+        band, _ = _risk_band({"a": 1.5}, _standard_metadata())
         self.assertEqual(band, "high")
-        self.assertAlmostEqual(error, 400.0 * 1.35)
 
     def test_distance_is_mean_absolute_zscore(self) -> None:
-        _, distance, _ = _risk_band({"a": 1.0, "b": -3.0}, _standard_metadata())
+        _, distance = _risk_band({"a": 1.0, "b": -3.0}, _standard_metadata())
         self.assertAlmostEqual(distance, 2.0)
+
+
+class IntervalTests(unittest.TestCase):
+    def test_uses_metadata_half_width(self) -> None:
+        metadata = _standard_metadata()
+        metadata["interval_half_width_eur"] = 500.0
+        self.assertAlmostEqual(_interval_half_width(metadata), 500.0)
+
+    def test_falls_back_to_scaled_mae(self) -> None:
+        metadata = {"expected_mae_eur": 400.0}
+        self.assertAlmostEqual(_interval_half_width(metadata), 640.0)
 
 
 class CandidateDriverTests(unittest.TestCase):
