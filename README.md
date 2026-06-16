@@ -474,7 +474,7 @@ The current run selects **ElasticNet** (`alpha = 0.5`, `l1_ratio = 0.8`):
 <div align="center">
 
 | Metric | Value |
-|---|---:|
+|---|---|
 | Holdout R² | 0.647 |
 | Holdout MAE | €383.58 |
 | Mean baseline R² | -0.030 |
