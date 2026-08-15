@@ -1,5 +1,5 @@
 <div align="center">
-           
+            
 # Coffee Shop Profit Predictor
 <img width="1664" height="936" alt="Coffee-Shop-Profit-Predictor" src="https://github.com/user-attachments/assets/a1aad381-a557-4343-8fa5-374d95ca1ec4" />
 
