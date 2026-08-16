@@ -2,7 +2,7 @@
        
 # Coffee Shop Profit Predictor
 <img width="1664" height="936" alt="Coffee-Shop-Profit-Predictor" src="https://github.com/user-attachments/assets/a1aad381-a557-4343-8fa5-374d95ca1ec4" />
-
+ 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![SQLite](https://img.shields.io/badge/SQLite-Feature%20Engineering-lightgrey)
 ![scikit-learn](https://img.shields.io/badge/scikit--learn-Regression-orange)
